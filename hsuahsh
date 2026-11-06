@@ -1,0 +1,89 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local names = {
+    ["M9"] = true,
+    ["FAL"] = true,
+    ["AK-47"] = true,
+    ["Remington 870"] = true,
+    ["REMINGTON"] = true,
+    ["MP5"] = true,
+    ["Revolver"] = true,
+    ["REVOLVER"] = true,
+    ["M700"] = true,
+    ["Sniper"] = true,
+    ["SNIPER"] = true,
+    ["M4A1"] = true
+}
+
+local enabled = false
+
+-- Create compact toggle button
+local gui = Instance.new("ScreenGui")
+gui.Name = "QuickSwapUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.fromOffset(65, 28)
+button.Position = UDim2.new(1, -80, 0.5, 0)
+button.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.TextSize = 12
+button.Text = "QS: OFF"
+button.BorderSizePixel = 0
+button.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 6)
+corner.Parent = button
+
+-- Toggle quick swap
+button.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    button.Text = enabled and "QS: ON" or "QS: OFF"
+    button.BackgroundColor3 = enabled
+        and Color3.fromRGB(90, 55, 160)
+        or Color3.fromRGB(35, 35, 45)
+end)
+
+-- Find available guns
+local function getAvailableTools()
+    local tools = {}
+
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and names[tool.Name] then
+            table.insert(tools, tool)
+        end
+    end
+
+    return tools
+end
+
+-- Continuously cycle through available guns
+task.spawn(function()
+    while true do
+        if enabled then
+            local character = player.Character
+            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+            if humanoid then
+                local tools = getAvailableTools()
+
+                if #tools > 0 then
+                    for _, tool in ipairs(tools) do
+                        if not enabled then break end
+                        if tool.Parent == backpack then
+                            humanoid:EquipTool(tool)
+                            task.wait(0.1)
+                        end
+                    end
+                end
+            end
+        end
+
+        task.wait(0.05)
+    end
+end)
